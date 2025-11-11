@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taurel Logistics</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <!-- Manifest + iconos -->
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" href="https://universidadtaurel.com/wp-content/uploads/2022/12/log2o.png" type="image/png">
+  <link rel="apple-touch-icon" href="https://universidadtaurel.com/wp-content/uploads/2022/12/log2o.png">
+
+  <!-- Estilos sexy -->
+  <link rel="stylesheet" href="style.css"/>
+</head>
+
+<body>
+  <!-- Fondo animado -->
+  <div class="bg-gradient"></div>
+
+  <!-- Header con logo visible -->
+  <header class="header-glass">
+    <h1>
+      <img src="https://universidadtaurel.com/wp-content/uploads/2022/12/log2o.png"
+           alt="Taurel"
+           style="height: 32px; width: auto; background: #fff; border-radius: 6px; padding: 2px; vertical-align: middle; margin-right: 10px;">
+      Taurel Logistics
+    </h1>
+  </header>
+
+  <!-- Buscador -->
+  <section class="search-glass">
+    <h3>Buscar shipment (MBL, HBL, ID, referencia…)</h3>
+    <div class="input-box">
+      <input type="text" id="searchInput" placeholder="Ej: CMDUCHN2585634">
+      <button class="btn-primary" onclick="searchAny()">Mostrar</button>
+    </div>
+  </section>
+
+  <!-- Mapa -->
+  <div id="map"></div>
+
+    <!-- Leyenda debajo del mapa -->
+  <div class="leyenda-wrapper">
+    <div class="leyenda">
+      <div class="leyenda-item">
+        <div class="leyenda-linea"></div>
+        <span>Línea azul: Ruta del barco</span>
+      </div>
+      <div class="leyenda-item">
+        <div class="leyenda-linea" style="border-top: 3px dashed blue;"></div>
+        <span>Línea azul punteada: Trayecto entre paradas</span>
+      </div>
+      <div class="leyenda-item">
+        <div class="leyenda-punto" style="background:#00529b;"></div>
+        <span>Puntos: Paradas intermedias</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resultados -->
+  <div id="output"></div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+# ---------- NODE ---------- 
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ---------- CAPACITOR ---------- 
+android/app/build/
+android/app/release/
+android/.gradle/
+android/captures/
+ios/App/build/
+ios/App/Pods/
+ios/App/Podfile.lock
+ios/App/App.xcworkspace/
+ios/App/App.xcodeproj/project.xcworkspace/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/xcshareddata/
+
+# ---------- ANDROID STUDIO ---------- 
+*.apk
+*.aab
+*.ap_
+*.dex
+local.properties
+.idea/
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ---------- SYSTEM ---------- 
+.DS_Store
+Thumbs.db
+
+# ---------- ENV / CONFIG ---------- 
+.env
+.env.local
+.env.*.local
+
+# ---------- LOGS ---------- 
+*.log
+logs/
+*.log.*
+
+# ---------- TEMP ---------- 
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ---------- CUSTOM ---------- 
+# Si más adelante usas un backend, añade aquí:
+# backend/vendor/
+# backend/.env

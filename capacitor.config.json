@@ -1,0 +1,6 @@
+{
+  "appId": "com.taurel.shipping",
+  "appName": "Portal Taurel",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}

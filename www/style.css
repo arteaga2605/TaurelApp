@@ -1,0 +1,292 @@
+/* ---------- ROOT + RESET ---------- */
+:root {
+  --azul: #00529b;
+  --azul-osc: #003d73;
+  --cyan: #00c6ff;
+  --cyan-claro: #6df7ff;
+  --blanco: #ffffff;
+  --sombra: 0 8px 32px rgba(0, 82, 155, 0.37);
+  --radio: 16px;
+  --fuente: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--fuente);
+  background: #0f1c2e;
+  color: #f1f1f1;
+  overflow-x: hidden;
+}
+
+/* ---------- NORMALIZACIÓN DE TAMAÑO DE FUENTE ---------- */
+html {
+  font-size: 62.5%; /* 1rem = 10px (base 10) */
+}
+body {
+  font-size: 1.6rem; /* 16px reales en cualquier densidad */
+}
+
+/* ---------- FONDO ANIMADO ---------- */
+.bg-gradient {
+  position: fixed;
+  inset: -20%;
+  width: 140%;
+  height: 140%;
+  background: radial-gradient(circle at 20% 20%, var(--azul) 0%, #0f1c2e 40%),
+              radial-gradient(circle at 80% 80%, var(--cyan) 0%, #0f1c2e 40%);
+  animation: bgMove 20s ease infinite;
+  z-index: -2;
+}
+
+@keyframes bgMove {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(-5%, -5%) scale(1.1); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* ---------- HEADER ---------- */
+.header-glass {
+  margin: 20px 20px 0 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  text-align: center;
+}
+
+.header-glass h1 {
+  font-weight: 700;
+  font-size: 1.8rem;
+  background: linear-gradient(90deg, var(--cyan-claro), var(--blanco));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---------- BUSCADOR GLASS ---------- */
+.search-glass {
+  margin: 20px;
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+.search-glass h3 {
+  margin: 0 0 15px 0;
+  font-weight: 600;
+  color: var(--cyan-claro);
+}
+
+.input-box {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+input[type="text"] {
+  flex: 1 1 260px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.85);
+  color: #0f1c2e;
+  transition: box-shadow 0.3s;
+}
+
+input[type="text"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--cyan);
+}
+
+/* ---------- BOTÓN SEXY ---------- */
+.btn-primary {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--cyan), var(--azul));
+  color: var(--blanco);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0, 198, 255, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* ---------- MAPA + LEYENDA SIEMPRE VISIBLES ---------- */
+#map {
+  height: 50vh;           /* ocupa la mitad de la pantalla (ajustable) */
+  min-height: 300px;      /* nunca más pequeño que esto */
+  margin: 20px;
+  border-radius: var(--radio);
+  overflow: hidden;
+  box-shadow: var(--sombra);
+}
+
+.leyenda-wrapper {
+  margin: 0 20px 20px 20px;   /* mismo ancho que el mapa */
+}
+
+.leyenda {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0 0 var(--radio) var(--radio);
+  padding: 12px 20px;
+  font-size: 1.4rem;
+  color: var(--cyan-claro);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.leyenda-linea {
+  width: 30px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--cyan), var(--azul));
+  border-radius: 2px;
+}
+
+.leyenda-punto {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.verde  { background: #27e8a9; }
+.rojo   { background: #ff4d70; }
+.ship   { font-size: 1.6rem; }
+
+/* ---------- RESULTADOS (CARDS GLASS) ---------- */
+#output {
+  margin: 20px;
+  display: grid;
+  gap: 20px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(10px);
+  border-left: 4px solid var(--cyan);
+  border-radius: var(--radio);
+  padding: 22px;
+  transition: transform 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  color: var(--cyan-claro);
+}
+
+.card > div {
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+/* ---------- ESTADOS ---------- */
+.status-ok {
+  color: #27e8a9;
+  font-weight: 600;
+}
+
+.status-delay {
+  color: #ff4d70;
+  font-weight: 600;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 600px) {
+  .header-glass h1 {
+    font-size: 1.4rem;
+  }
+  #map {
+    height: 40vh; /* un poco menos en móviles muy bajos */
+  }
+}
+
+/* ---------- LOADER SEXY ---------- */
+.loader-box {
+  text-align: center;
+  padding: 40px;
+}
+.spinner {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 15px;
+  border: 5px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.loader-box p {
+  color: var(--cyan-claro);
+  font-weight: 600;
+}
+
+/* ---------- OVERLAY CENTRADO ---------- */
+.overlay-loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 28, 46, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay-loader .loader-box {
+  text-align: center;
+}
+
+.overlay-loader .spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.overlay-loader p {
+  margin-top: 15px;
+  color: var(--cyan-claro);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
