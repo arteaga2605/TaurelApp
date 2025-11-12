@@ -53,7 +53,7 @@ logs/
 *.swo
 *~
 
-# ---------- CUSTOM ---------- 
+# ---------- CUSTOM --------
 # Si más adelante usas un backend, añade aquí:
 # backend/vendor/
 # backend/.env
