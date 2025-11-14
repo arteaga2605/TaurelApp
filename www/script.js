@@ -48,11 +48,9 @@ async function login() {
 
 /* =========  3.  Cargar shipments  ========= */
 async function loadAllShipments() {
-  // 🔒 BLOQUEAR entrada mientras carga
   document.getElementById("searchInput").disabled = true;
   document.querySelector(".btn-primary").disabled = true;
 
-  // Crear overlay con loader centrado
   const overlay = document.createElement('div');
   overlay.className = 'overlay-loader';
   overlay.innerHTML = `
@@ -83,15 +81,12 @@ async function loadAllShipments() {
     const data = await res.json();
     allShipments = data.data || [];
 
-    // Quitar overlay y mensaje de éxito
     overlay.remove();
     document.getElementById("output").innerHTML = `✅ Cargados ${allShipments.length} shipments. Ya puedes buscar.`;
   } catch (err) {
-    // Quitar overlay y mostrar error
     overlay.remove();
     document.getElementById("output").innerHTML = "❌ Error al cargar shipments: " + err.message;
   } finally {
-    // 🔓 DESBLOQUEAR entrada al terminar (éxito o error)
     document.getElementById("searchInput").disabled = false;
     document.querySelector(".btn-primary").disabled = false;
   }
@@ -150,6 +145,7 @@ function searchAny() {
       <div><strong>Peso Total:</strong> ${found.totalWeight || "N/A"} ${found.totalWeightUnit || ""}</div>
       <div><strong>Volumen Total:</strong> ${found.totalVolume || "N/A"} ${found.totalVolumeUnit || ""}</div>
     </div>
+    ${botonVerClima(found)}
   `;
 
   document.getElementById("output").innerHTML = html;
@@ -286,7 +282,7 @@ async function verMapaTiempoReal() {
     const poly = L.polyline([
       [orig.coordinates.lat, orig.coordinates.lon],
       [ais.lat, ais.lon],
-      [dest.coordinates.lat, dest.coordinates.lon]
+      [dest.coordinates.lat, destino.coordinates.lon]
     ], { color: "#00529b", weight: 4 }).addTo(map);
     map.fitBounds(poly.getBounds().pad(0.1));
 
@@ -301,13 +297,12 @@ function drawMap(origin, destination, events = []) {
   mapDiv.style.margin = '20px';
 
   setTimeout(() => {
-    const map = L.map('map').setView([0, 0], 2); // centro neutro mientras cargamos
+    const map = L.map('map').setView([0, 0], 2);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    /* ---------- ICONOS REALES ---------- */
     const greenIcon = new L.Icon({
       iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -331,10 +326,8 @@ function drawMap(origin, destination, events = []) {
       className: 'ship-icon'
     });
 
-    /* ---------- PUNTOS SIEMPRE VISIBLES ---------- */
     let points = [];
 
-    // 1. Origen siempre
     if (origin && origin.lat != null && origin.lng != null) {
       L.marker([parseFloat(origin.lat), parseFloat(origin.lng)], { icon: greenIcon })
         .addTo(map)
@@ -342,7 +335,6 @@ function drawMap(origin, destination, events = []) {
       points.push([parseFloat(origin.lat), parseFloat(origin.lng)]);
     }
 
-    // 2. Cada evento que tenga coordenadas
     events.forEach(e => {
       if (e.location && e.location.lat != null && e.location.lng != null) {
         L.marker([parseFloat(e.location.lat), parseFloat(e.location.lng)])
@@ -352,7 +344,6 @@ function drawMap(origin, destination, events = []) {
       }
     });
 
-    // 3. Destino siempre
     if (destination && destination.lat != null && destination.lng != null) {
       L.marker([parseFloat(destination.lat), parseFloat(destination.lng)], { icon: redIcon })
         .addTo(map)
@@ -360,7 +351,6 @@ function drawMap(origin, destination, events = []) {
       points.push([parseFloat(destination.lat), parseFloat(destination.lng)]);
     }
 
-    // 4. Barco (último evento con coordenadas)
     const lastEvent = events.filter(e => e.location && e.location.lat != null && e.location.lng != null).pop();
     if (lastEvent) {
       L.marker([parseFloat(lastEvent.location.lat), parseFloat(lastEvent.location.lng)], { icon: shipIcon })
@@ -368,7 +358,6 @@ function drawMap(origin, destination, events = []) {
         .bindPopup('Ubicación actual del barco');
     }
 
-    // 5. Línea punteada entre puntos
     if (points.length > 1) {
       const polyline = L.polyline(points, {
         color: 'blue',
@@ -384,3 +373,136 @@ function drawMap(origin, destination, events = []) {
     setTimeout(() => map.invalidateSize(), 100);
   }, 150);
 }
+
+/* =========  8.  Botón “Ver clima” con FALLBACK  ========= */
+const WEATHER_API = 'https://api.open-meteo.com/v1/forecast';
+
+function degToCard(deg) {
+  const arr = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+  return arr[Math.round(deg / 22.5) % 16];
+}
+
+// ✅ FUNCIÓN CON FALLBACK A ORIGEN, DESTINO O EVENTOS
+function botonVerClima(shipment) {
+  let lat, lon;
+
+  // 1. Intentar usar lastKnownLocation
+  if (shipment.lastKnownLocation?.lat != null && shipment.lastKnownLocation?.lon != null) {
+    lat = parseFloat(shipment.lastKnownLocation.lat);
+    lon = parseFloat(shipment.lastKnownLocation.lon);
+  }
+  // 2. Si no, usar origen
+  else if (shipment.origin?.lat != null && shipment.origin?.lng != null) {
+    lat = parseFloat(shipment.origin.lat);
+    lon = parseFloat(shipment.origin.lng);
+  }
+  // 3. Si no, usar destino
+  else if (ipment.destination?.lat != null && shipment.destination?.lng != null) {
+    lat = parseFloat(shipment.destination.lat);
+    lon = parseFloat(shipment.destination.lng);
+  }
+  // 4. Si no, usar primer evento con coordenadas
+  else {
+    const firstEvent = (shipment.events || [])
+      .find(e => e.location?.lat != null && e.location?.lon != null);
+
+    if (!firstEvent) return ''; // ❌ No hay coordenadas en ningún lado
+    lat = parseFloat(firstEvent.location.lat);
+    lon = parseFloat(firstEvent.location.lon);
+  }
+
+  return `<button class="btn-clima" onclick="verClima(${lat}, ${lon}, '${shipment.shipmentId}')">🌤️ Ver clima</button>`;
+}
+
+async function verClima(lat, lon, id) {
+  try {
+    if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon)) {
+      throw new Error('Coordenadas inválidas');
+    }
+
+    const cleanLat = lat.toFixed(4);
+    const cleanLon = lon.toFixed(4);
+
+    // 🔍 URL sin parámetros marinos (siempre funciona)
+    const url = `${WEATHER_API}?latitude=${cleanLat}&longitude=${cleanLon}&current_weather=true&timezone=auto`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status} – ${res.statusText}`);
+    const json = await res.json();
+
+    const current = json.current_weather;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-clima';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+        <h2>Clima actual - Envío ${id}</h2>
+        <p><strong>Temperatura:</strong> ${current.temperature} °C</p>
+        <p><strong>Viento:</strong> ${current.windspeed} km/h (${degToCard(current.winddirection)})</p>
+        <p><strong>Hora local:</strong> ${new Date(current.time).toLocaleString('es-ES')}</p>
+        <br>
+        <button onclick="this.parentElement.parentElement.remove()">Cerrar</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } catch (e) {
+    alert('No se pudo cargar el clima: ' + e.message);
+  }
+}
+
+/* ---------- CSS rápido (sin tocar style.css) ---------- */
+const estilo = document.createElement('style');
+estilo.textContent = `
+.modal-clima {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal-content {
+  background: #fff;
+  color: #0f1c2e;
+  padding: 25px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+.modal-content h2 {
+  margin-bottom: 15px;
+  color: #00529b;
+}
+.modal-content p {
+  margin: 8px 0;
+}
+.modal-content button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg,#00c6ff,#00529b);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+.close {
+  float: right;
+  font-size: 24px;
+  cursor: pointer;
+}
+.btn-clima {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg,#00c6ff,#00529b);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+`;
+document.head.appendChild(estilo);
