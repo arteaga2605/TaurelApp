@@ -1,0 +1,133 @@
+📘 DOCUMENTACIÓN OFICIAL – PORTAL TAUREL
+(100 % compatible con Capacitor, sin frameworks pesados)
+DESCRIPCIÓN GENERAL
+Portal Taurel es una PWA híbrida (web + Android/iOS via Capacitor) que permite a usuarios y clientes consultar el estado de sus envíos marítimos en tiempo real:
+• Login automático con credenciales fijas de integración
+• Listado y búsqueda local de shipments (MBL, HBL, ID, referencia)
+• Visualización de ruta, paradas, contenedores y últimos eventos
+• Mapa interactivo con posición AIS del buque (origen → barco → destino)
+• Botón “Ver clima” que muestra temperatura, viento y oleaje (Open-Meteo)
+• Notificaciones push de alertas meteorológicas (opcional)
+Todo sin librerías pesadas: vanilla JS, Leaflet, Capacitor Plugins.
+
+
+ARQUITECTURA Y FLUJO DE DATOS
+(1) Arranque
+DOMContentLoaded → Capacitor (Splash + StatusBar) → login()
+(2) Autenticación
+POST https://taurel.cargologik.app/api/v2/users/login
+Body: {email: "integration@taurel.com", password: "QGd0EX59of3aVP3M"}
+Guarda window.token para usar en endpoints posteriores.
+(3) Carga masiva de shipments
+POST /shipments
+Body: {limit: 300, page: 1, filter: {}, fields: [...]}
+Respuesta → allShipments[] (array global)
+(4) Búsqueda local
+searchAny() → filtra por shipmentId, mbl, hbl, referenceName (upper-case)
+(5) Mapas y AIS
+• Por cada shipment: events[] con coordinates → origen/destino
+• Nombre del buque → /vessels/search → IMO
+• /vessels/{IMO}/positions → lat, lon, timestamp → marcador 🚢
+• Leaflet dibuja línea origen-barco-destino y ajusta vista.
+(6) Clima
+Botón “Ver clima” → Open-Meteo (sin key)
+Fallback de coordenadas: lastKnownLocation → origin → destination → primer evento con location.
+(7) Alertas push (weather-alerts.js)
+Cada 30 min: último shipment con coordenadas → OpenWeather (key gratuita) → si viento > 15 m/s → notificación push por Capacitor.
+
+
+ESTRUCTURA DE ARCHIVOS
+index.html
+ ├─ style.css (UI glassmorphism + glassmorphism loader)
+ ├─ script.js (lógica principal, mapas, clima)
+ ├─ weather-alerts.js (loop de alertas push – opcional)
+ ├─ manifest.json (PWA)
+ ├─ capacitor.config.json
+ └─ package.json + package-lock.json (Capacitor 7 + Leaflet)
+
+
+ENDPOINTS UTILIZADOS
+Base: https://taurel.cargologik.app/api/v2
+POST /users/login
+POST /shipments
+GET /vessels/search?name={nombre}
+GET /vessels/{IMO}/positions
+Externos:
+GET https://api.open-meteo.com/v1/forecast?latitude=...&longitude=...&current_weather=true&timezone=auto
+GET https://api.openweathermap.org/data/2.5/weather?lat=...&lon=...&appid={KEY} (alertas)
+
+
+FORMATO DE COORDENADAS
+• Lat/lng siempre como número (parseFloat).
+• toFixed(4) antes de llamar Open-Meteo (evita 400).
+• Orden de preferencia para “Ver clima”:
+ 1. lastKnownLocation.lat/lon
+ 2. origin.lat/lng
+ 3. destination.lat/lng
+ 4. events[n].location.lat/lon (primer match)
+
+
+MAPAS – LEAFLET
+• Capa base: OpenStreetMap.
+• Iconos:
+ 🟢 Verde → origen
+ 🔴 Rojo → destino
+ 🚢 DivIcon HTML → barco (última posición AIS)
+• Línea azul continua: origen → barco → destino.
+• Línea azul punteada: paradas intermedias (events con coords).
+• map.fitBounds(polyline.getBounds().pad(0.1)) auto-zoom.
+
+
+ESTILOS Y RESPONSIVE
+• 1 rem = 10 px (html 62.5 %).
+• Glassmorphism: fondo animado radial-gradient + backdrop-filter.
+• #map height: 50 vh (mín. 300 px).
+• Media-query ≤ 600 px: reduce altura del mapa y tamaño de letra.
+• Loader centrado: overlay fijo con spinner CSS.
+
+
+CAPACITOR – CONFIGURACIÓN CLAVE
+appId: com.taurel.shipping
+webDir: www
+Plugins usados:
+• SplashScreen: se oculta tras DOMContentLoaded.
+• StatusBar: color #00529b, estilo LIGHT.
+• PushNotifications: canal “weather” para alertas.
+
+
+Build Android:
+npm install
+npx cap sync android
+npx cap open android
+Luego Build → Build Bundle(s)/APK(s) en Android Studio.
+
+
+NOTIFICACIONES PUSH (OPCIONAL)
+weather-alerts.js se carga después de script.js.
+Requiere clave gratuita de OpenWeather.
+Crea canal “weather” y programa notificación local si viento > 15 m/s.
+No interfere con el resto de la app: si no hay key o falla, no crashea.
+
+
+SEGURIDAD Y GOOD PRACTICES
+• Credenciales fijas solo para integración; en producción usar OAuth o token dinámico.
+• Validación de NaN y null en coordenadas antes de fetch.
+• Sin eval(), innerHTML solo en templates controlados.
+• fetch con try/catch y comprobación de res.ok.
+• CSS encapsulado en :root y clases semánticas.
+
+
+EXTENSIBILIDAD FUTURA
+• Sustituir login fijo por formulario OAuth.
+• Agregar selector de idioma (i18n).
+• Cachear shipments en IndexedDB para offline.
+• WebSockets para posición en tiempo real.
+• Gráficos de temperatura/oleaje con Chart.js.
+• Publicar en Play Store: firmar APK, subir imagenes 512×512, 1024×500, política de privacidad.
+
+
+TROUBLESHOOTING RÁPIDO
+Botón “Ver clima” no aparece → console.log(found) y revisar orden de fallback.
+400 en Open-Meteo → revisar decimales (máx. 4) y quitar parámetros marinos si se usa tierra firme.
+Mapa gris → asegurar setTimeout(() => map.invalidateSize(), 100) tras crear el div.
+Push no llega → verificar canal creado, icono ic_stat_weather en res/drawable, y permisos POST_NOTIFICATIONS en AndroidManifest.
